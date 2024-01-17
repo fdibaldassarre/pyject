@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import Type, Tuple, Callable, Generator, Optional, Any, Dict, List
 
 from pyject.annotations import PyjectConstructor
@@ -51,6 +52,7 @@ class MappingStore:
 
     def __init__(self):
         self.mappings: Dict[DependencyIdentifier, DependencyInfo] = dict()
+        self.logger = getLogger(MappingStore.__name__)
 
     def _get_provider_methods(self, module: AbstractModule) -> Generator[Tuple[Type, Callable[..., Any]], None, None]:
         method_list = [func for func in dir(module) if callable(getattr(module, func))]
@@ -63,10 +65,12 @@ class MappingStore:
         for module in modules:
             module.configure()
             for mapping, (target_type, scope) in module.mappings.items():
+                self.logger.debug(f"Bind {mapping.type} [{mapping.name}] to {target_type}")
                 self.mappings[mapping] = DependencyInfo.build(target_type, scope)
             for mapped_type, constructor in self._get_provider_methods(module):
                 dep_info = DependencyInfo.build(mapped_type, Scope.SINGLETON, constructor)
-                self.mappings[DependencyIdentifier(mapped_type, dep_info.instance_name)] = dep_info
+                self.logger.debug(f"Bind {dep_info.instance_class} [{dep_info.instance_name}] to provider")
+                self.mappings[DependencyIdentifier(dep_info.instance_class, dep_info.instance_name)] = dep_info
 
     def get_actual_instance_with_scope(self, ide: DependencyIdentifier) -> DependencyInfo:
         if ide.name is not None:
