@@ -1,5 +1,5 @@
 import inspect
-from typing import Type, Dict, Callable, Union, Optional
+from typing import Type, Dict, Callable, Union, Optional, Any
 
 
 def get_type_annotations(f: Union[Type, Callable]) -> Dict[str, Type]:
@@ -12,7 +12,7 @@ def get_type_annotations(f: Union[Type, Callable]) -> Dict[str, Type]:
     return arguments
 
 
-def get_return_type(f: Callable) -> Optional[Type]:
+def get_return_type(f: Callable[[...], Any]) -> Optional[Type]:
     for key, key_type in f.__annotations__.items():
         if key == "return":
             return key_type

@@ -11,26 +11,21 @@ class DependencyInfo:
                  instance_class: Type,
                  scope: Scope,
                  constructor: Optional[Callable[..., Any]] = None,
-                 instance_name: Optional[str] = None,
-                 requirements_names: Optional[Dict[str, str]] = None
+                 instance_name: Optional[str] = None
                  ):
         self.instance_class = instance_class
         self.scope = scope
         self.instance_name = instance_name
         self.constructor = constructor
-        self.requirements_names = requirements_names
 
     def get_requirements(self) -> Dict[str, DependencyIdentifier]:
         if self.constructor is None:
             args = get_type_annotations(self.instance_class.__init__)
-            #var_args = get_default_args(instance_class.__init__)
         else:
             args = get_type_annotations(self.constructor)
-            #var_args = get_default_args(instance_constructor)
         result = dict()
         for name, dep_type in args.items():
-            dep_name = self.requirements_names.get(name) if self.requirements_names is not None else None
-            result[name] = DependencyIdentifier(dep_type, dep_name)
+            result[name] = DependencyIdentifier(dep_type)
         return result
 
     @staticmethod
@@ -40,12 +35,10 @@ class DependencyInfo:
               ) -> 'DependencyInfo':
         if isinstance(constructor, PyjectConstructor):
             instance_name = constructor.__instance_name__
-            requirements_names = constructor.__named_args__
         else:
             instance_name = None
-            requirements_names = None
         return DependencyInfo(instance_class, scope, constructor,
-                              instance_name=instance_name, requirements_names=requirements_names)
+                              instance_name=instance_name)
 
 
 class MappingStore:
